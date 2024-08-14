@@ -4,20 +4,20 @@ import { Chessboard } from "react-chessboard";
 import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import io from "socket.io-client";
+import useSound from "use-sound";
+import capture from "../assets/capture.mp3";
 import Spinner from "../Spinner";
-
-const API_URL = "http://localhost:3001"; // Replace with your production API URL
+const API_URL = "http://localhost:3001";
 
 function Game() {
+	const [moveSound] = useSound(capture);
 	const [game, setGame] = useState(new Chess());
-	const [arrows, setArrows] = useState([]);
 	const [boardOrientation, setBoardOrientation] = useState("white");
-	const [showPromotionDialog, setShowPromotionDialog] = useState(false);
-	const [promotionToSquare, setPromotionToSquare] = useState(null);
 	const [loading, setLoading] = useState(true);
 	const [socket, setSocket] = useState(null);
 	const [canMove, setCanMove] = useState(false);
 	const [playerColor, setPlayerColor] = useState(null);
+	const [gameStart, setGameStart] = useState(false);
 	const chessboardRef = useRef();
 
 	const { gameid: gameId } = useParams();
@@ -28,10 +28,8 @@ function Game() {
 	const onDrop = useCallback(
 		(sourceSquare, targetSquare) => {
 			if (!canMove) return false;
-
 			const gameCopy = new Chess(game.fen());
 			let move;
-
 			try {
 				move = gameCopy.move({
 					from: sourceSquare,
@@ -39,30 +37,34 @@ function Game() {
 					promotion: "q", // always promote to queen for simplicity
 				});
 			} catch (error) {
+				console.error("Invalid move:", error);
 				return false;
 			}
 
 			if (move === null) return false;
-
 			setGame(gameCopy);
+			moveSound();
 			setCanMove(false);
-			// Emit the move to the server
+
 			if (socket) {
 				socket.emit("makeMove", {
 					gameId,
-					move: gameCopy.fen(),
+					move: { from: sourceSquare, to: targetSquare, promotion: "q" },
 					userId: playerId,
 				});
 			}
 
 			if (gameCopy.isGameOver()) {
-				alert(
-					gameCopy.isCheckmate()
-						? `Checkmate! ${gameCopy.turn() === "w" ? "Black" : "White"} wins!`
-						: gameCopy.isDraw()
-						? "Game ended in a draw!"
-						: "Game over!"
-				);
+				let message = "Game over!";
+				if (gameCopy.isCheckmate()) {
+					message = `Checkmate! ${
+						gameCopy.turn() === "w" ? "Black" : "White"
+					} wins!`;
+				} else if (gameCopy.isDraw()) {
+					message = "Game ended in a draw!";
+				}
+				alert(message);
+				navigate("/room");
 			}
 
 			return true;
@@ -70,94 +72,10 @@ function Game() {
 		[game, socket, gameId, playerId, canMove]
 	);
 
-	const onSquareClick = useCallback(
-		(square) => {
-			if (!canMove) return;
-
-			const gameCopy = new Chess(game.fen());
-			const moves = gameCopy.moves({ square, verbose: true });
-
-			if (moves.length === 0) return;
-
-			setArrows(moves.map((move) => [square, move.to, "green"]));
-		},
-		[game, canMove]
-	);
-
-	const onSquareRightClick = useCallback((square) => {
-		setArrows((prevArrows) => {
-			const newArrows = [...prevArrows];
-			const index = newArrows.findIndex(
-				(arrow) => arrow[0] === square && arrow[1] === square
-			);
-			if (index === -1) {
-				newArrows.push([square, square, "red"]);
-			} else {
-				newArrows.splice(index, 1);
-			}
-			return newArrows;
-		});
-	}, []);
-
-	const onPromotionPieceSelect = useCallback(
-		(piece) => {
-			if (!promotionToSquare) return false;
-
-			const gameCopy = new Chess(game.fen());
-			const move = gameCopy.move({
-				from: promotionToSquare.slice(0, 2),
-				to: promotionToSquare.slice(2),
-				promotion: piece[1].toLowerCase(),
-			});
-
-			if (move) {
-				setGame(gameCopy);
-				setShowPromotionDialog(false);
-				setPromotionToSquare(null);
-				setCanMove(false);
-
-				// Emit the move to the server
-				if (socket) {
-					socket.emit("makeMove", {
-						gameId,
-						move: gameCopy.fen(),
-						userId: playerId,
-					});
-				}
-
-				return true;
-			}
-			return false;
-		},
-		[game, promotionToSquare, socket, gameId, playerId]
-	);
-
 	useEffect(() => {
-		const newSocket = io(`${API_URL}`); // Use the production server URL
-		setSocket(newSocket);
-
-		newSocket.on("connect", () => {
-			console.log("Connected to server");
-			newSocket.emit("joinGame", gameId);
-		});
-
-		newSocket.on("gameStart", ({ playerColor }) => {
-			setPlayerColor(playerColor);
-			setBoardOrientation(playerColor);
-			setCanMove(playerColor === "white");
-			setLoading(false);
-		});
-
-		newSocket.on("moveMade", ({ move, userId }) => {
-			if (userId !== playerId) {
-				setGame(new Chess(move));
-				setCanMove(true);
-			}
-		});
-
 		const fetchGameData = async () => {
 			try {
-				const response = await fetch(`${API_URL}/api/gamecheck/${gameId}`); // Use the production API URL
+				const response = await fetch(`${API_URL}/api/gamecheck/${gameId}`);
 				if (!response.ok) {
 					throw new Error("Failed to fetch game data");
 				}
@@ -198,6 +116,7 @@ function Game() {
 			if (!isPlayer1 && !gameData.player2Id) {
 				gameData = await joinGame();
 			}
+			console.log(gameData);
 
 			if (
 				!gameData ||
@@ -208,53 +127,73 @@ function Game() {
 			}
 
 			setGame(new Chess(gameData.board));
-
-			// Set loading to false after initializing the game
 			setLoading(false);
 		};
-
 		if (isLoggedIn) {
 			initializeGame();
 		} else {
 			setLoading(false);
 		}
+		const newSocket = io(API_URL);
+		setSocket(newSocket);
+
+		newSocket.on("connect", () => {
+			console.log("Connected to server");
+			newSocket.emit("joinGame", gameId);
+		});
+
+		newSocket.on("gameStart", (data) => {
+			// const d = await data.json();
+
+			// console.log(data.player1Id === playerId ? "white" : "black");
+			setLoading(true);
+			setPlayerColor(data.player1Id === playerId ? "white" : "black");
+			setBoardOrientation(playerColor);
+			setCanMove(playerColor === "white");
+			setLoading(false);
+			setGameStart(true);
+		});
+
+		newSocket.on("moveMade", ({ move, userId }) => {
+			if (userId !== playerId) {
+				setGame(new Chess(move));
+				setCanMove(true);
+			}
+		});
 
 		return () => {
 			newSocket.disconnect();
 		};
-	}, [gameId, navigate, playerId, isLoggedIn]);
+	}, [gameId, navigate, playerId, playerColor, isLoggedIn]);
 
 	if (loading) {
 		return <Spinner />;
 	}
-
 	return (
 		<div className='flex h-screen justify-between bg-gray-900'>
 			<div className='w-3/4 flex flex-col items-center justify-center'>
-				<div className='h-96 w-96 rounded-lg overflow-hidden border-black border-2'>
+				<div className='h-96 w-96 rounded-lg border-black border-2'>
 					<Chessboard
 						position={game.fen()}
 						onPieceDrop={onDrop}
-						onSquareClick={onSquareClick}
-						onSquareRightClick={onSquareRightClick}
-						onPromotionPieceSelect={onPromotionPieceSelect}
-						customArrows={arrows}
 						boardOrientation={boardOrientation}
 						showBoardNotation={true}
 						arePiecesDraggable={canMove}
-						showPromotionDialog={showPromotionDialog}
-						promotionToSquare={promotionToSquare}
 						animationDuration={300}
 						ref={chessboardRef}
 					/>
 				</div>
 				<div className='mt-4 text-white'>
-					{canMove ? "Your turn" : "Opponent's turn"}
+					{gameStart
+						? canMove
+							? "Your turn"
+							: "Opponent's turn"
+						: "Game Not Yet Started"}
 				</div>
 			</div>
 			<div className='w-1/4 bg-gray-800 flex flex-col items-center justify-center rounded-lg'>
-				{/* Your Chat Component Here */}
 				<div className='text-white text-lg'>Chat Component Placeholder</div>
+				{/* https://magicui.design/docs/components/animated-list here use this component and send and receive the messages from the chat*/}
 			</div>
 		</div>
 	);

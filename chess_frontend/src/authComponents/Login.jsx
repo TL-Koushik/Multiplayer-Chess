@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import auth from "../appwrite/auth";
+import Spinner from "../Spinner";
 import { login, logout } from "../store/authSlice";
 import ClearableInput from "./ClearableInput";
 import "./Login.css"; // Import your CSS file for animations
@@ -9,6 +10,7 @@ import PasswordInput from "./PasswordInput";
 
 function Login() {
 	const dispatch = useDispatch();
+	const [loading, setLoading] = useState(false);
 	const navigate = useNavigate();
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -24,7 +26,7 @@ function Login() {
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-
+		setLoading(true);
 		try {
 			const acc = await auth.login({
 				email: email,
@@ -41,9 +43,11 @@ function Login() {
 			setError(
 				"There was an error logging into your account. Please try again."
 			);
+		} finally {
+			setLoading(false);
 		}
 	};
-
+	if (loading) return <Spinner />;
 	return (
 		<div className='login-container m-5'>
 			<h2 className='text-3xl font-bold mb-6'>Login</h2>
