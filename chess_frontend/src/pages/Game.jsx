@@ -5,9 +5,10 @@ import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import io from "socket.io-client";
 import useSound from "use-sound";
+import conf from "../../conf";
 import capture from "../assets/capture.mp3";
 import Spinner from "../Spinner";
-const API_URL = "http://192.168.1.60:3001";
+const API_URL = conf.API_URL;
 
 function Game() {
 	const [moveSound] = useSound(capture);

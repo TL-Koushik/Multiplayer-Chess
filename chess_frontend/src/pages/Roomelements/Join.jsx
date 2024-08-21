@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-const API_URL = "http://192.168.1.60:3001";
+
+import conf from "../../../conf";
+const API_URL = conf.API_URL;
 function Join() {
 	const [roomId, setroomId] = useState("");
 	const navigate = useNavigate();

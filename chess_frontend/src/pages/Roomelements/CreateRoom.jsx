@@ -1,14 +1,15 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-
+import conf from "../../../conf";
 const CreateRoom = () => {
 	const navigate = useNavigate();
 	const id = useSelector((state) => state.auth.id);
 
 	const handleClick = async () => {
 		try {
-			const response = await fetch("http://192.168.1.60:3001/api/creategame", {
+			console.log(conf.API_URL);
+			const response = await fetch(`${conf.API_URL}/api/creategame`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
