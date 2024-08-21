@@ -8,14 +8,14 @@ const CreateRoom = () => {
 
 	const handleClick = async () => {
 		try {
-			const response = await fetch("http://localhost:3001/api/creategame", {
+			const response = await fetch("http://192.168.1.60:3001/api/creategame", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
 				},
 				body: JSON.stringify({ userid: id }),
 			});
-
+			console.log("here");
 			if (!response.ok) {
 				throw new Error("Failed to create a new game room");
 			}
@@ -32,7 +32,7 @@ const CreateRoom = () => {
 		<div className='flex justify-center mt-4'>
 			<button
 				type='button'
-				className='rounded-md border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-300 hover:bg-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300'
+				className='w-full rounded-md border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-300 hover:bg-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300'
 				onClick={handleClick}
 			>
 				Create Room

@@ -7,7 +7,7 @@ import io from "socket.io-client";
 import useSound from "use-sound";
 import capture from "../assets/capture.mp3";
 import Spinner from "../Spinner";
-const API_URL = "http://localhost:3001";
+const API_URL = "http://192.168.1.60:3001";
 
 function Game() {
 	const [moveSound] = useSound(capture);

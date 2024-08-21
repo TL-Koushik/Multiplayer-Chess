@@ -4,6 +4,7 @@ import React from "react";
 import chessImage from "../assets/chess.png";
 import Ai from "./Roomelements/Ai";
 import CreateRoom from "./Roomelements/CreateRoom";
+import Join from "./Roomelements/Join";
 
 function Room() {
 	return (
@@ -20,9 +21,14 @@ function Room() {
 			</div>
 
 			{/* Right Section */}
-			<div className='md:flex-1 flex flex-col justify-center items-center p-5'>
-				<div className='max-w-md mx-auto'>
+			<div className='md:flex-1 flex flex-col justify-center items-center gap-6'>
+				<div>
 					<CreateRoom />
+				</div>
+				<div>
+					<Join />
+				</div>
+				<div>
 					<Ai />
 				</div>
 			</div>
