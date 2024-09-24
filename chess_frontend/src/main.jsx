@@ -41,11 +41,15 @@ const router = createBrowserRouter([
 			},
 			{
 				path: "/room",
-				element: <Room />,
+				element: <AuthCheckRev>
+				<Room />
+			</AuthCheckRev>,
 			},
 			{
 				path: "/room/:gameid",
-				element: <Game />,
+				element:<AuthCheckRev>
+				<Game />
+			</AuthCheckRev>,
 			},
 			{
 				path: "/about_us",
@@ -53,7 +57,9 @@ const router = createBrowserRouter([
 			},
 			{
 				path: "/profile",
-				element: <>Profile</>, // Corrected rendering for profile
+				element: <AuthCheckRev>
+				<>profile</>
+			</AuthCheckRev>, // Corrected rendering for profile
 			},
 		],
 	},

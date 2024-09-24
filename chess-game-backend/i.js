@@ -18,12 +18,14 @@ app.use(express.json());
 
 const games = {};
 
-const createGame = (userid) => {
+const createGame = (userid,name) => {
 	const gameId = Math.random().toString(36).substr(2, 9);
 	games[gameId] = {
 		board: new Chess(),
 		player1Id: userid,
+		player1Name:name,
 		player2Id: null,
+		player2Name:null,
 	};
 	console.log("game created" + games[gameId].player1Id);
 	return gameId;
@@ -31,7 +33,7 @@ const createGame = (userid) => {
 
 const getGame = (gameId) => games[gameId];
 
-app.get("/api/gamecheck/:gameId", (req, res) => {
+app.get("/api/gamecheck/:gameId/", (req, res) => {
 	const { gameId } = req.params;
 	const game = getGame(gameId);
 	if (game) {
@@ -39,6 +41,8 @@ app.get("/api/gamecheck/:gameId", (req, res) => {
 			board: game.board.fen(),
 			player1Id: game.player1Id,
 			player2Id: game.player2Id,
+			player1Name: game.player1Name,
+			player2Name: game.player2Name,
 		});
 	} else {
 		res.status(404).json({ error: "Game not found" });
@@ -47,8 +51,8 @@ app.get("/api/gamecheck/:gameId", (req, res) => {
 
 app.post("/api/creategame", (req, res) => {
 	try {
-		const { userid } = req.body;
-		const gameId = createGame(userid);
+		const { userid,name } = req.body;
+		const gameId = createGame(userid,name);
 		res.json({ gameId });
 	} catch (error) {
 		console.error("Error creating game:", error);
@@ -56,8 +60,8 @@ app.post("/api/creategame", (req, res) => {
 	}
 });
 
-app.post("/api/joingame/:gameId/:playerId", (req, res) => {
-	const { gameId, playerId } = req.params;
+app.post("/api/joingame/:gameId/:playerId/:name", (req, res) => {
+	const { gameId, playerId ,name} = req.params;
 	let game = getGame(gameId);
 
 	if (!game) {
@@ -66,6 +70,7 @@ app.post("/api/joingame/:gameId/:playerId", (req, res) => {
 
 	if (!game.player2Id) {
 		game.player2Id = playerId;
+		game.player2Name=name;
 	} else if (game.player1Id !== playerId && game.player2Id !== playerId) {
 		return res.status(400).json({ error: "Game is full" });
 	}
@@ -74,6 +79,8 @@ app.post("/api/joingame/:gameId/:playerId", (req, res) => {
 		board: game.board.fen(),
 		player1Id: game.player1Id,
 		player2Id: game.player2Id,
+		player1Name: game.player1Name,
+		player2Name:game.player2Name,
 	});
 });
 
@@ -89,17 +96,20 @@ io.on("connection", (socket) => {
 		// const game = games[gameId];
 		const game = games[gameId];
 
-		const mappedObj = Object.fromEntries(
-			Object.entries(game).map(([key, value]) => [key, value * 2])
-		);
+		// const mappedObj = Object.fromEntries(
+		// 	Object.entries(game).map(([key, value]) => [key, value * 2])
+		// );
 
-		console.log(mappedObj);
+		// console.log(mappedObj);
 		if (games[gameId].player1Id != null && games[gameId].player2Id != null) {
 			io.to(gameId).emit("gameStart", games[gameId]);
 			console.log("game started");
 		}
 	});
-
+	socket.on("msg",({playerId,msg,gameId})=>{
+		console.log("recied",msg);
+		io.to(gameId).emit("recieveMsg",{playerId,msg});
+	});
 	socket.on("makeMove", ({ gameId, move, userId }) => {
 		let game = games[gameId];
 		if (game) {

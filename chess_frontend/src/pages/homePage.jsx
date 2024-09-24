@@ -1,6 +1,6 @@
 import React from "react";
 import { useSelector } from "react-redux";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import ChessBoardImage from "../assets/chess-board.jpg";
 import CommunityImage from "../assets/community.jpg";
 import CreateRoomImage from "../assets/create-room.jpg";
@@ -8,7 +8,7 @@ import AuthCheckRev from "./AuthCheckRev";
 
 function HomePage() {
 	const status = useSelector((state) => state.auth.status);
-
+	const nav=useNavigate();
 	return (
 		<div>
 			<main className='flex-grow flex  items-center'>
@@ -25,7 +25,7 @@ function HomePage() {
 					</section>
 
 					<section className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-						<div className='bg-gray-700 rounded-lg overflow-hidden transition-transform ease-in-out duration-500 transform hover:scale-105'>
+						<div onClick={()=>nav("/room")} className='bg-gray-700 rounded-lg overflow-hidden transition-transform ease-in-out duration-500 transform hover:scale-105'>
 							<img
 								src={ChessBoardImage}
 								alt='Chess Board'
@@ -36,7 +36,7 @@ function HomePage() {
 								<p>Join a game or create your own room to play with friends.</p>
 							</div>
 						</div>
-						<div className='bg-gray-700 rounded-lg overflow-hidden transition-transform ease-in-out duration-500 transform hover:scale-105'>
+						<div onClick={()=>nav("/room")} className='bg-gray-700 rounded-lg overflow-hidden transition-transform ease-in-out duration-500 transform hover:scale-105'>
 							<img
 								src={CreateRoomImage}
 								alt='Create Room'
@@ -47,7 +47,8 @@ function HomePage() {
 								<p>Create a private room, invite friends, and start playing.</p>
 							</div>
 						</div>
-						<div className='bg-gray-700 rounded-lg overflow-hidden transition-transform ease-in-out duration-500 transform hover:scale-105'>
+						<div onc 
+						onClick={()=>nav("/room")} className='bg-gray-700 rounded-lg overflow-hidden transition-transform ease-in-out duration-500 transform hover:scale-105'>
 							<img
 								src={CommunityImage}
 								alt='Community'

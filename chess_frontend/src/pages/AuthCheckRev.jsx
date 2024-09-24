@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import Spinner from "../Spinner";
 import auth from "../appwrite/auth";
-import { login, logout } from "../store/authSlice";
+import { login, logout,setName } from "../store/authSlice";
 
 const AuthCheckRev = ({ children }) => {
 	const dispatch = useDispatch();
@@ -23,8 +23,9 @@ const AuthCheckRev = ({ children }) => {
 				console.log(acc);
 				if (acc) {
 					const data = acc.email;
-					console.log(acc.email);
+					console.log(acc.name);
 					dispatch(login(data));
+					dispatch(setName(acc.name));
 					// Redirect if user is logged in and tries to access /login or /signup
 					if (
 						location.pathname === "/login" ||

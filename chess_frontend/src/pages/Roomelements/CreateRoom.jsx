@@ -5,7 +5,7 @@ import conf from "../../../conf";
 const CreateRoom = () => {
 	const navigate = useNavigate();
 	const id = useSelector((state) => state.auth.id);
-
+	const name=useSelector((state) => state.auth.name);
 	const handleClick = async () => {
 		try {
 			console.log(conf.API_URL);
@@ -14,7 +14,7 @@ const CreateRoom = () => {
 				headers: {
 					"Content-Type": "application/json",
 				},
-				body: JSON.stringify({ userid: id }),
+				body: JSON.stringify({ userid: id, name:name}),
 			});
 			console.log("here");
 			if (!response.ok) {

@@ -8,6 +8,11 @@ import useSound from "use-sound";
 import conf from "../../conf";
 import capture from "../assets/capture.mp3";
 import Spinner from "../Spinner";
+import Msgsent from "./chatelementa/Msgsent";
+import Msgrec from "./chatelementa/Msgrec";
+import { LogIn } from "lucide-react";
+// import Chat from "./chatelementa/Chat";
+import { v4 as uuid } from 'uuid';
 const API_URL = conf.API_URL;
 
 function Game() {
@@ -20,12 +25,35 @@ function Game() {
 	const [playerColor, setPlayerColor] = useState(null);
 	const [gameStart, setGameStart] = useState(false);
 	const chessboardRef = useRef();
-
+	const [OppnName,setOppnName]=useState("")
 	const { gameid: gameId } = useParams();
 	const navigate = useNavigate();
 	const playerId = useSelector((state) => state.auth.id);
 	const isLoggedIn = useSelector((state) => state.auth.status);
-
+	const name = useSelector((state) => state.auth.name);
+	const [Msgs,setMsgs]=useState([{
+		sent:null,
+		msg:null,
+	}]);
+	const [MsgInput,setMsgInput]=useState("");
+	const handleMsgInput=(e)=>{
+		if (!MsgInput.trim())return;
+		const msg=MsgInput;
+		if(socket){
+			try{
+				socket.emit("msg",{playerId,msg,gameId});
+				console.log("heeee");
+				// setMsgs((state)=>[...state,{
+				// 	sent:playerId,
+				// 	msg:MsgInput,
+				// }]);
+			}
+			catch(errot){
+				console.log("error sending msges");
+			}
+		}
+		setMsgInput("");
+	}
 	const onDrop = useCallback(
 		(sourceSquare, targetSquare) => {
 			if (!canMove) return false;
@@ -74,6 +102,7 @@ function Game() {
 	);
 
 	useEffect(() => {
+		console.log(name);
 		const fetchGameData = async () => {
 			try {
 				const response = await fetch(`${API_URL}/api/gamecheck/${gameId}`);
@@ -90,7 +119,7 @@ function Game() {
 		const joinGame = async () => {
 			try {
 				const response = await fetch(
-					`${API_URL}/api/joingame/${gameId}/${playerId}`,
+					`${API_URL}/api/joingame/${gameId}/${playerId}/${name}`,
 					{
 						method: "POST",
 					}
@@ -126,7 +155,7 @@ function Game() {
 				navigate("/room");
 				return;
 			}
-
+			setOppnName(gameData.player1Id===playerId ? gameData.player2Name : gameData.player1Name)
 			setGame(new Chess(gameData.board));
 			setLoading(false);
 		};
@@ -161,7 +190,12 @@ function Game() {
 				setCanMove(true);
 			}
 		});
-
+		newSocket.on("recieveMsg",({playerId,msg})=>{
+			setMsgs((state)=>[...state,{
+				sent:playerId,
+				msg:msg,
+			}]);
+		})
 		return () => {
 			newSocket.disconnect();
 		};
@@ -172,8 +206,9 @@ function Game() {
 	}
 	return (
 		<div className='flex h-screen justify-between bg-gray-900'>
-			<div className='w-3/4 flex flex-col items-center justify-center'>
+			<div className='w-2/4 flex flex-col items-center justify-center'>
 				<div className='h-96 w-96 rounded-lg border-black border-2'>
+					
 					<Chessboard
 						position={game.fen()}
 						onPieceDrop={onDrop}
@@ -191,11 +226,60 @@ function Game() {
 							: "Opponent's turn"
 						: "Game Not Yet Started"}
 				</div>
+				{/* <div>{Name}</div> */}
 			</div>
 			<div className='w-1/4 bg-gray-800 flex flex-col items-center justify-center rounded-lg'>
-				<div className='text-white text-lg'>Chat Component Placeholder</div>
-				{/* https://magicui.design/docs/components/animated-list here use this component and send and receive the messages from the chat*/}
-			</div>
+				{/* <div className='text-white text-lg'>Chat Component Placeholder</div> */}
+				
+    <div className="max-w-md mx-auto bg-white dark:bg-zinc-800 shadow-md rounded-lg overflow-hidden">
+      <div className="flex flex-col h-[400px]">
+        <div className="px-4 py-3 border-b dark:border-zinc-700">
+          <div className="flex justify-between items-center">
+            <h2 className="text-lg font-semibold text-zinc-800 dark:text-white">
+              {OppnName}
+            </h2>
+            <div className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+              Online
+            </div>
+          </div>
+        </div>
+        <div
+          className="flex-1 p-3 overflow-y-auto flex flex-col space-y-2"
+          id="chatDisplay"
+        >
+			{Msgs.map((msgObj)=>{
+				if(msgObj.sent==playerId)return <Msgsent key={uuid()}msg={msgObj.msg}/>;
+				return <Msgrec key={uuid()} msg={msgObj.msg}/>;
+			})}
+        </div>
+        <div className="px-3 py-2 border-t dark:border-zinc-700">
+          <div className="flex gap-2">
+            <input
+              placeholder="Type your message..."
+              className="flex-1 p-2 border rounded-lg dark:bg-zinc-700 dark:text-white dark:border-zinc-600 text-sm"
+              id="chatInput"
+              type="text"
+			  value={MsgInput}
+			  onChange={(e)=>{setMsgInput(e.target.value)}}
+			  onKeyDown={(e) => {
+				if (e.key === "Enter")
+					handleMsgInput();
+				}}
+            />
+			
+            <button
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1.5 px-3 rounded-lg transition duration-300 ease-in-out text-sm"
+              id="sendButton"
+			  onClick={handleMsgInput}
+			  
+            >
+              Send
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+			</div>	
 		</div>
 	);
 }
