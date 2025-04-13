@@ -40,7 +40,7 @@ function Game() {
 		if(socket){
 			try{
 				socket.emit("msg",{playerId,msg,gameId});
-				console.log("heeee");
+				// console.log("heeee");
 				// setMsgs((state)=>[...state,{
 				// 	sent:playerId,
 				// 	msg:MsgInput,
@@ -54,6 +54,7 @@ function Game() {
 	}
 	const onDrop = useCallback(
 		(sourceSquare, targetSquare) => {
+			if(game.turn()!=playerColor.charAt(0))return false;
 			if (!canMove) return false;
 			const gameCopy = new Chess(game.fen());
 			let move;

@@ -8,6 +8,7 @@ import "./Signup.css"; // Import your CSS file for animations
 
 function Signup() {
 	const dispatch = useDispatch();
+	const [disabled,setDisabled]=useState(false);
 	const [name, setName] = useState("");
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -37,13 +38,14 @@ function Signup() {
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-
 		// Simple name validation (not empty)
+		setDisabled(true);
 		if (!name.trim()) {
 			setErrors((prevErrors) => ({
 				...prevErrors,
 				name: "Name cannot be empty.",
 			}));
+			setDisabled(false);
 			return;
 		} else {
 			setErrors((prevErrors) => ({
@@ -58,6 +60,7 @@ function Signup() {
 				...prevErrors,
 				email: "Please enter a valid email address.",
 			}));
+			setDisabled(false);
 			return;
 		} else {
 			setErrors((prevErrors) => ({
@@ -72,6 +75,7 @@ function Signup() {
 				...prevErrors,
 				password: "Password must be at least 6 characters long.",
 			}));
+			setDisabled(false);
 			return;
 		} else {
 			setErrors((prevErrors) => ({
@@ -105,6 +109,10 @@ function Signup() {
 				...prevErrors,
 				email: "Error creating account. Please try again.",
 			}));
+		}
+		finally{
+
+			setDisabled(false);
 		}
 	};
 
@@ -142,6 +150,7 @@ function Signup() {
 				)}
 				<button
 					type='submit'
+					disabled={disabled}
 					className='bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:bg-blue-600'
 				>
 					Sign Up

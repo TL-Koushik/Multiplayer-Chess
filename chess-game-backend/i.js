@@ -21,7 +21,7 @@ const games = {};
 const createGame = (userid,name) => {
 	const gameId = Math.random().toString(36).substr(2, 9);
 	games[gameId] = {
-		board: new Chess("6k1/5ppp/8/8/8/8/5PPP/6Kq w - - 0 1"),
+		board: new Chess(),
 		player1Id: userid,
 		player1Name:name,
 		player2Id: null,
@@ -36,6 +36,7 @@ const getGame = (gameId) => games[gameId];
 app.get("/api/gamecheck/:gameId/", (req, res) => {
 	const { gameId } = req.params;
 	const game = getGame(gameId);
+	console.log("game was checked");
 	if (game) {
 		res.json({
 			board: game.board.fen(),
@@ -99,12 +100,13 @@ io.on("connection", (socket) => {
 		// const mappedObj = Object.fromEntries(
 		// 	Object.entries(game).map(([key, value]) => [key, value * 2])
 		// );
-
+		io.to(gameId).emit("gameStart", games[gameId]);
+		console.log("game started");
 		// console.log(mappedObj);
-		if (games[gameId].player1Id != null && games[gameId].player2Id != null) {
-			io.to(gameId).emit("gameStart", games[gameId]);
-			console.log("game started");
-		}
+		// if (games[gameId].player1Id != null && games[gameId].player2Id != null) {
+		// 	io.to(gameId).emit("gameStart", games[gameId]);
+		// 	console.log("game started");
+		// }
 	});
 	socket.on("msg",({playerId,msg,gameId})=>{
 		console.log("recied",msg);
