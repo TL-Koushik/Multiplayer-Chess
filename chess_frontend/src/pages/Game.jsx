@@ -10,7 +10,6 @@ import capture from "../assets/capture.mp3";
 import Spinner from "../Spinner";
 import Msgsent from "./chatelementa/Msgsent";
 import Msgrec from "./chatelementa/Msgrec";
-import { LogIn } from "lucide-react";
 // import Chat from "./chatelementa/Chat";
 import { v4 as uuid } from 'uuid';
 const API_URL = conf.API_URL;
@@ -21,7 +20,7 @@ function Game() {
 	const [boardOrientation, setBoardOrientation] = useState("white");
 	const [loading, setLoading] = useState(true);
 	const [socket, setSocket] = useState(null);
-	const [canMove, setCanMove] = useState(false);
+	const [canMove, setCanMove] = useState(true);
 	const [playerColor, setPlayerColor] = useState(null);
 	const [gameStart, setGameStart] = useState(false);
 	const chessboardRef = useRef();
@@ -73,8 +72,7 @@ function Game() {
 			if (move === null) return false;
 			setGame(gameCopy);
 			moveSound();
-			setCanMove(false);
-
+			console.log("game turn"+game.turn())
 			if (socket) {
 				socket.emit("makeMove", {
 					gameId,
@@ -179,7 +177,6 @@ function Game() {
 			setLoading(true);
 			setPlayerColor(data.player1Id === playerId ? "white" : "black");
 			setBoardOrientation(playerColor);
-			setCanMove(playerColor === "white");
 			setLoading(false);
 			setGameStart(true);
 		});
@@ -187,7 +184,7 @@ function Game() {
 		newSocket.on("moveMade", ({ move, userId }) => {
 			if (userId !== playerId) {
 				setGame(new Chess(move));
-				setCanMove(true);
+				
 			}
 		});
 		newSocket.on("recieveMsg",({playerId,msg})=>{
@@ -221,9 +218,9 @@ function Game() {
 				</div>
 				<div className='mt-4 text-white'>
 					{gameStart
-						? canMove
-							? "Your turn"
-							: "Opponent's turn"
+						? game.turn()=='b'
+							? "Black turn"
+							: "white turn"
 						: "Game Not Yet Started"}
 				</div>
 				{/* <div>{Name}</div> */}
