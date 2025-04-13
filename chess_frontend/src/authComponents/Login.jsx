@@ -33,7 +33,7 @@ function Login() {
 				password: password,
 			});
 			if (acc) {
-				dispatch(login(acc.$id));
+				dispatch(login(acc.email));
 				navigate("/"); // Redirect to homepage after successful login
 			} else {
 				dispatch(logout());

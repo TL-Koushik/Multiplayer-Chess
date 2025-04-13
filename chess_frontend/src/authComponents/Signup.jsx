@@ -88,7 +88,7 @@ function Signup() {
 			});
 
 			if (acc) {
-				dispatch(login(acc.$id)); // Assuming login action expects an ID
+				dispatch(login(acc.email)); // Assuming login action expects an ID
 				// Redirect to dashboard or home page after successful signup
 				// Example: navigate("/dashboard");
 			} else {
