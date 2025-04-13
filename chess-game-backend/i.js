@@ -12,7 +12,7 @@ const io = socketIo(server, {
 		methods: ["GET", "POST"],
 	},
 });
-
+//dont use node js cors in app already nginx is configurged for cors
 app.use(cors());
 app.use(express.json());
 
