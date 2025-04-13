@@ -16,6 +16,8 @@ const API_URL = conf.API_URL;
 
 function Game() {
 	const [moveSound] = useSound(capture);
+	const [gameResult, setGameResult] = useState(null); // null or { result: 'win' | 'lose' | 'draw', message: string }
+
 	const [game, setGame] = useState(new Chess());
 	const [boardOrientation, setBoardOrientation] = useState("white");
 	const [loading, setLoading] = useState(true);
@@ -30,10 +32,7 @@ function Game() {
 	const playerId = useSelector((state) => state.auth.id);
 	const isLoggedIn = useSelector((state) => state.auth.status);
 	const name = useSelector((state) => state.auth.name);
-	const [Msgs,setMsgs]=useState([{
-		sent:null,
-		msg:null,
-	}]);
+	const [Msgs,setMsgs]=useState([]);
 	const [MsgInput,setMsgInput]=useState("");
 	const handleMsgInput=(e)=>{
 		if (!MsgInput.trim())return;
@@ -81,24 +80,33 @@ function Game() {
 				});
 			}
 
-			if (gameCopy.isGameOver()) {
-				let message = "Game over!";
-				if (gameCopy.isCheckmate()) {
-					message = `Checkmate! ${
-						gameCopy.turn() === "w" ? "Black" : "White"
-					} wins!`;
-				} else if (gameCopy.isDraw()) {
-					message = "Game ended in a draw!";
-				}
-				alert(message);
-				navigate("/room");
-			}
-
+			gameOver();
 			return true;
 		},
 		[game, socket, gameId, playerId, canMove]
 	);
-
+	const gameOver = () => {
+		console.log("called gameover");
+		const gameCopy = new Chess(game.fen());
+		if (gameCopy.isGameOver()) {
+			let result = "";
+			let message = "Game over!";
+	
+			if (gameCopy.isCheckmate()) {
+				const winner = gameCopy.turn() === "w" ? "Black" : "White";
+				message = `Checkmate! ${winner} wins!`;
+	
+				// Check player's color
+				const yourColor = playerColor.charAt(0); // 'w' or 'b'
+				result = winner.toLowerCase().charAt(0) === yourColor ? "win" : "lose";
+			} else if (gameCopy.isDraw()) {
+				message = "Game ended in a draw!";
+				result = "draw";
+			}
+	
+			setGameResult({ result, message });
+		}
+	};
 	useEffect(() => {
 		console.log(name);
 		const fetchGameData = async () => {
@@ -159,6 +167,7 @@ function Game() {
 		};
 		if (isLoggedIn) {
 			initializeGame();
+			gameOver();
 		} else {
 			setLoading(false);
 		}
@@ -184,8 +193,8 @@ function Game() {
 		newSocket.on("moveMade", ({ move, userId }) => {
 			if (userId !== playerId) {
 				setGame(new Chess(move));
-				
 			}
+			gameOver();
 		});
 		newSocket.on("recieveMsg",({playerId,msg})=>{
 			setMsgs((state)=>[...state,{
@@ -203,6 +212,24 @@ function Game() {
 	}
 	return (
 		<div className='flex h-screen justify-between bg-gray-900'>
+			{gameResult!=null && (
+	<div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-80 flex items-center justify-center z-50">
+		<div className="bg-white dark:bg-zinc-900 p-6 rounded-lg shadow-xl text-center w-80">
+			<h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">
+				{gameResult.result === "win" && "🎉 You Win!"}
+				{gameResult.result === "lose" && "😞 You Lose!"}
+				{gameResult.result === "draw" && "🤝 It's a Draw!"}
+			</h2>
+			<p className="text-gray-600 dark:text-gray-300 mb-6">{gameResult.message}</p>
+			<button
+				onClick={() => navigate("/room")}
+				className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
+			>
+				Back to Room
+			</button>
+		</div>
+	</div>
+)}
 			<div className='w-2/4 flex flex-col items-center justify-center'>
 				<div className='h-96 w-96 rounded-lg border-black border-2'>
 					
@@ -216,13 +243,33 @@ function Game() {
 						ref={chessboardRef}
 					/>
 				</div>
-				<div className='mt-4 text-white'>
-					{gameStart
-						? game.turn()=='b'
-							? "Black turn"
-							: "white turn"
-						: "Game Not Yet Started"}
-				</div>
+				<div className="mt-4">
+				<div className={`px-5 py-3 rounded-xl shadow-lg text-lg font-semibold flex items-center gap-3 transition-all duration-300 
+  ${gameStart 
+    ? (game.turn() === playerColor.charAt(0) ? 'bg-green-600' : 'bg-yellow-600') 
+    : 'bg-gray-600'}
+`}>
+  {gameStart ? (
+    game.turn() === playerColor.charAt(0) ? (
+      <>
+        <span className="text-white text-2xl">♟️</span>
+        <span className="text-white">Your Turn <span className="text-sm ml-2">(Color: {playerColor})</span></span>
+      </>
+    ) : (
+      <>
+        <span className="text-white text-2xl">⏳</span>
+        <span className="text-white">Opponent's Turn</span>
+      </>
+    )
+  ) : (
+    <>
+      <span className="text-white text-2xl">🎮</span>
+      <span className="text-white">Game Not Yet Started</span>
+    </>
+  )}
+</div>
+
+</div>
 				{/* <div>{Name}</div> */}
 			</div>
 			<div className='w-1/4 bg-gray-800 flex flex-col items-center justify-center rounded-lg'>

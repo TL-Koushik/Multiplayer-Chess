@@ -21,7 +21,7 @@ const games = {};
 const createGame = (userid,name) => {
 	const gameId = Math.random().toString(36).substr(2, 9);
 	games[gameId] = {
-		board: new Chess("6k1/5ppp/8/8/8/8/5PPP/5RK1 w - - 0 1"),
+		board: new Chess("6k1/5ppp/8/8/8/8/5PPP/6Kq w - - 0 1"),
 		player1Id: userid,
 		player1Name:name,
 		player2Id: null,
