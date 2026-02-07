@@ -14,6 +14,8 @@ const io = socketIo(server, {
 });
 //dont use node js cors in app already nginx is configurged for cors
 app.use(cors());
+//
+
 app.use(express.json());
 
 const games = {};
@@ -132,4 +134,4 @@ io.on("connection", (socket) => {
 });
 
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT,'127.0.0.1' ,() => console.log(`Server running on port ${PORT}`));
