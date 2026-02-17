@@ -23,7 +23,6 @@ const AuthCheckRev = ({ children }) => {
 				console.log(acc);
 				if (acc) {
 					const data = acc.email;
-					console.log(acc.name);
 					dispatch(login(data));
 					dispatch(setName(acc.name));
 					// Redirect if user is logged in and tries to access /login or /signup

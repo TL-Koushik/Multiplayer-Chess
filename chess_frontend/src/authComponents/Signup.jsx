@@ -57,10 +57,10 @@ function Signup() {
         password,
         userName: name,
       });
-
+      
       if (acc) {
-        dispatch(login(acc.email));
-        navigate("/"); // redirect after signup
+        dispatch(login(email));
+        navigate("/");
       } else {
         dispatch(logout());
       }

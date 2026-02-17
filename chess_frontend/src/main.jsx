@@ -7,7 +7,7 @@ import Login from "./authComponents/Login.jsx";
 import Signup from "./authComponents/Signup.jsx";
 import "./index.css";
 import About from "./pages/About.jsx";
-import AuthCheck from "./pages/AuthCheck.jsx";
+// import AuthCheck from "./pages/AuthCheck.jsx";
 import AuthCheckRev from "./pages/AuthCheckRev.jsx";
 import ErrorPage from "./pages/ErrorPage.jsx";
 import Game from "./pages/Game.jsx";

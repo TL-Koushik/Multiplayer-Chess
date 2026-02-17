@@ -10,8 +10,8 @@ import capture from "../assets/capture.mp3";
 import Spinner from "../Spinner";
 import Msgsent from "./chatelementa/Msgsent";
 import Msgrec from "./chatelementa/Msgrec";
+import { data } from "autoprefixer";
 // import Chat from "./chatelementa/Chat";
-import { v4 as uuid } from 'uuid';
 const API_URL = conf.API_URL;
 
 function Game() {
@@ -22,7 +22,6 @@ function Game() {
 	const [boardOrientation, setBoardOrientation] = useState("white");
 	const [loading, setLoading] = useState(true);
 	const [socket, setSocket] = useState(null);
-	const [canMove, setCanMove] = useState(true);
 	const [playerColor, setPlayerColor] = useState(null);
 	const [gameStart, setGameStart] = useState(false);
 	const chessboardRef = useRef();
@@ -46,7 +45,7 @@ function Game() {
 				// 	msg:MsgInput,
 				// }]);
 			}
-			catch(errot){
+			catch(error){
 				console.log("error sending msges");
 			}
 		}
@@ -55,7 +54,6 @@ function Game() {
 	const onDrop = useCallback(
 		(sourceSquare, targetSquare) => {
 			if(game.turn()!=playerColor.charAt(0))return false;
-			if (!canMove) return false;
 			const gameCopy = new Chess(game.fen());
 			let move;
 			try {
@@ -65,7 +63,7 @@ function Game() {
 					promotion: "q", // always promote to queen for simplicity
 				});
 			} catch (error) {
-				console.error("Invalid move:", error);
+				console.error("Invalid move from : "+sourceSquare+" to : "+targetSquare);
 				return false;
 			}
 
@@ -81,42 +79,41 @@ function Game() {
 				});
 			}
 
-			gameOver();
+			gameOver(gameCopy);
 			return true;
 		},
-		[game, socket, gameId, playerId, canMove]
+		[game, socket, gameId, playerId]
 	);
-	const gameOver = () => {
-		console.log("called gameover");
-		const gameCopy = new Chess(game.fen());
-		if (gameCopy.isGameOver()) {
+	const gameOver = (currentGame) => {
+		console.log("called gameover here");
+  		if (currentGame.isGameOver()) {
 			let result = "";
 			let message = "Game over!";
-	
-			if (gameCopy.isCheckmate()) {
-				const winner = gameCopy.turn() === "w" ? "Black" : "White";
+
+			if (currentGame.isCheckmate()) {
+				const winner = currentGame.turn() === "w" ? "Black" : "White";
 				message = `Checkmate! ${winner} wins!`;
-	
-				// Check player's color
-				const yourColor = playerColor.charAt(0); // 'w' or 'b'
+
+				const yourColor = playerColor.charAt(0);
 				result = winner.toLowerCase().charAt(0) === yourColor ? "win" : "lose";
-			} else if (gameCopy.isDraw()) {
+			} 
+			else if (currentGame.isDraw()) {
 				message = "Game ended in a draw!";
 				result = "draw";
 			}
-	
 			setGameResult({ result, message });
-		}
-	};
+  		}
+};
+
 	useEffect(() => {
-		console.log(name);
 		const fetchGameData = async () => {
 			try {
 				const response = await fetch(`${API_URL}/api/gamecheck/${gameId}`);
 				if (!response.ok) {
 					throw new Error("Failed to fetch game data");
 				}
-				return await response.json();
+				const data=await response.json();
+				return data;
 			} catch (error) {
 				console.error("Error fetching game data:", error);
 				return null;
@@ -143,6 +140,7 @@ function Game() {
 
 		const initializeGame = async () => {
 			let gameData = await fetchGameData();
+			console.log(Object.entries(gameData));
 
 			if (!gameData) {
 				navigate("/room");
@@ -153,12 +151,12 @@ function Game() {
 			if (!isPlayer1 && !gameData.player2Id) {
 				gameData = await joinGame();
 			}
-			console.log(gameData);
 
 			if (
 				!gameData ||
 				(playerId !== gameData.player1Id && playerId !== gameData.player2Id)
 			) {
+				
 				navigate("/room");
 				return;
 			}
@@ -168,7 +166,7 @@ function Game() {
 		};
 		if (isLoggedIn) {
 			initializeGame();
-			gameOver();
+			gameOver(game);
 		} else {
 			setLoading(false);
 		}
@@ -185,17 +183,18 @@ function Game() {
 
 			// console.log(data.player1Id === playerId ? "white" : "black");
 			setLoading(true);
-			setPlayerColor(data.player1Id === playerId ? "white" : "black");
-			setBoardOrientation(playerColor);
+			const color = data.player1Id === playerId ? "white" : "black";
+			setPlayerColor(color);
+			setBoardOrientation(color);
 			setLoading(false);
 			setGameStart(true);
 		});
 
-		newSocket.on("moveMade", ({ move, userId }) => {
+		newSocket.on("moveMade", ({ fen, userId }) => {
 			if (userId !== playerId) {
-				setGame(new Chess(move));
+				setGame(new Chess(fen));
 			}
-			gameOver();
+			gameOver(new Chess(fen));
 		});
 		newSocket.on("recieveMsg",({playerId,msg})=>{
 			setMsgs((state)=>[...state,{
@@ -246,7 +245,7 @@ function Game() {
           onPieceDrop={onDrop}
           boardOrientation={boardOrientation}
           showBoardNotation
-          arePiecesDraggable={canMove}
+          arePiecesDraggable={true}
           animationDuration={300}
           ref={chessboardRef}
         />
