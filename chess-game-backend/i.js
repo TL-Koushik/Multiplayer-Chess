@@ -35,16 +35,19 @@ const createGame = (userid,name) => {
 
 const getGame = (gameId) => games[gameId];
 
-app.get("/api/gamecheck/:gameId/", (req, res) => {
+app.get("/api/gamecheck/:gameId", (req, res) => {
 	const { gameId } = req.params;
 	const game = getGame(gameId);
 	console.log("game was checked");
 	if (game) {
+		console.log("Game object:", game);
+		console.log("Keys:", Object.keys(game));
+
 		res.json({
 			board: game.board.fen(),
 			player1Id: game.player1Id,
-			player2Id: game.player2Id,
 			player1Name: game.player1Name,
+			player2Id: game.player2Id,
 			player2Name: game.player2Name,
 		});
 	} else {
@@ -81,8 +84,8 @@ app.post("/api/joingame/:gameId/:playerId/:name", (req, res) => {
 	res.json({
 		board: game.board.fen(),
 		player1Id: game.player1Id,
-		player2Id: game.player2Id,
 		player1Name: game.player1Name,
+		player2Id: game.player2Id,
 		player2Name:game.player2Name,
 	});
 });
@@ -92,23 +95,19 @@ io.on("connection", (socket) => {
 
 	socket.on("joinGame", (gameId) => {
 		socket.join(gameId);
-		console.log(`Client joined game ${gameId}`);
-		if (!games[gameId]) {
-			console.log("Game not found");
-		}
-		// const game = games[gameId];
-		const game = games[gameId];
 
-		// const mappedObj = Object.fromEntries(
-		// 	Object.entries(game).map(([key, value]) => [key, value * 2])
-		// );
-		io.to(gameId).emit("gameStart", games[gameId]);
-		console.log("game started");
-		// console.log(mappedObj);
-		// if (games[gameId].player1Id != null && games[gameId].player2Id != null) {
-		// 	io.to(gameId).emit("gameStart", games[gameId]);
-		// 	console.log("game started");
-		// }
+		console.log(`Client joined game ${gameId}`);
+		const game = games[gameId];
+		if (!game) {
+			console.log("Game not found");
+			return
+		}
+
+		if (game.player2Id != null) {
+			io.to(gameId).emit("gameStart", game);
+			console.log("game started");
+		}
+	
 	});
 	socket.on("msg",({playerId,msg,gameId})=>{
 		console.log("recied",msg);
@@ -118,9 +117,14 @@ io.on("connection", (socket) => {
 		let game = games[gameId];
 		if (game) {
 			try {
-				game.board.move(move);
-				io.to(gameId).emit("moveMade", { move: game.board.fen(), userId });
-				//todo check if the person won or draw and make an entry to the database
+				const result = game.board.move(move);
+
+				if (!result) {
+					return;
+				}
+
+				io.to(gameId).emit("moveMade", { fen: game.board.fen(), userId });
+
 			} catch (error) {
 				console.error("Invalid move:", error);
 				socket.emit("moveError", { error: "Invalid move" });
