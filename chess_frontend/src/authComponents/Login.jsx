@@ -1,79 +1,94 @@
 import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import auth from "../appwrite/auth";
 import Spinner from "../Spinner";
 import { login, logout } from "../store/authSlice";
 import ClearableInput from "./ClearableInput";
-import "./Login.css"; // Import your CSS file for animations
 import PasswordInput from "./PasswordInput";
+import "./Login.css";
 
 function Login() {
-	const dispatch = useDispatch();
-	const [loading, setLoading] = useState(false);
-	const navigate = useNavigate();
-	const [email, setEmail] = useState("");
-	const [password, setPassword] = useState("");
-	const [error, setError] = useState("");
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-	const handleEmailChange = (e) => {
-		setEmail(e.target.value);
-	};
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
-	const handlePasswordChange = (e) => {
-		setPassword(e.target.value);
-	};
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-	const handleSubmit = async (e) => {
-		e.preventDefault();
-		setLoading(true);
-		try {
-			const acc = await auth.login({
-				email: email,
-				password: password,
-			});
-			if (acc) {
-				dispatch(login(acc.email));
-				navigate("/"); // Redirect to homepage after successful login
-			} else {
-				dispatch(logout());
-			}
-		} catch (error) {
-			console.error("Error logging in:", error);
-			setError(
-				"There was an error logging into your account. Please try again."
-			);
-		} finally {
-			setLoading(false);
-		}
-	};
-	if (loading) return <Spinner />;
-	return (
-		<div className='login-container m-5'>
-			<h2 className='text-3xl font-bold mb-6'>Login</h2>
-			<div className='w-72 space-y-4'>
-				<ClearableInput
-					type={"email"}
-					clearable={true}
-					placeholder={"Email"}
-					value={email}
-					onChange={handleEmailChange}
-				/>
-				<PasswordInput
-					placeholder={"Password"}
-					value={password}
-					onChange={handlePasswordChange}
-				/>
-				{error && <p className='text-red-500'>{error}</p>}
-				<button
-					className='bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:bg-blue-600'
-					onClick={handleSubmit}
-				>
-					Sign In
-				</button>
-			</div>
-		</div>
-	);
+    try {
+      const acc = await auth.login({ email, password });
+
+      if (acc) {
+        dispatch(login(acc.email));
+        navigate("/");
+      } else {
+        dispatch(logout());
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("Invalid email or password.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-center min-h-[80vh] px-4 relative">
+
+      {/* Spinner Overlay */}
+      {loading && <Spinner />}
+
+      {/* Login Form */}
+      <form
+        onSubmit={handleSubmit}
+        className="login-container w-full max-w-md bg-gray-800 p-8 rounded-2xl shadow-xl space-y-5"
+      >
+        <h2 className="text-3xl font-bold text-center">Sign In</h2>
+
+        <ClearableInput
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+
+        <PasswordInput
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+
+        {error && (
+          <p className="text-red-400 text-sm text-center">{error}</p>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-cyan-500 hover:bg-cyan-600 disabled:bg-gray-500 text-white py-2 rounded-lg font-semibold transition"
+        >
+          {loading ? "Signing in..." : "Sign In"}
+        </button>
+
+        <p className="text-sm text-gray-400 text-center">
+          Don’t have an account?{" "}
+          <span
+            className="text-cyan-400 cursor-pointer"
+            onClick={() => navigate("/signup")}
+          >
+            Sign up
+          </span>
+        </p>
+      </form>
+    </div>
+  );
 }
 
 export default Login;

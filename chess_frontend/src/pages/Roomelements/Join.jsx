@@ -1,46 +1,60 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
 import conf from "../../../conf";
+
 const API_URL = conf.API_URL;
+
 function Join() {
-	const [roomId, setroomId] = useState("");
-	const navigate = useNavigate();
-	function handleSubmit() {
-		if (roomId.length != 9) return;
-		const fetchGameData = async () => {
-			try {
-				const response = await fetch(`${API_URL}/api/gamecheck/${roomId}`);
-				if (!response.ok) {
-					throw new Error("Failed to fetch game data");
-				}
-				return await response.json();
-			} catch (error) {
-				console.error("Error fetching game data:", error);
-				return null;
-			}
-		};
-		if (fetchGameData()) navigate(`${roomId}`);
-		setroomId("");
-	}
-	return (
-		<div className='flex justify-center mt-4'>
-			<input
-				type='text'
-				className='w-full h-full m-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 bg-gray-700 text-white placeholder-gray-400'
-				value={roomId}
-				onChange={(e) => {
-					setroomId(e.target.value);
-				}}
-			/>
-			<button
-				className='p-3  m-4 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:bg-blue-600'
-				onClick={handleSubmit}
-			>
-				Join
-			</button>
-		</div>
-	);
+  const [roomId, setRoomId] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSubmit = async () => {
+    if (roomId.trim().length !== 9) return;
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${API_URL}/api/gamecheck/${roomId}`);
+
+      if (!response.ok) throw new Error("Room not found");
+
+      const gameData = await response.json();
+
+      if (gameData) {
+        navigate(`/room/${roomId}`); // adjust route if needed
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Invalid Room ID");
+    } finally {
+      setLoading(false);
+      setRoomId("");
+    }
+  };
+
+  return (
+    <div className="w-full max-w-md flex gap-2 mt-4">
+
+      <input
+        type="text"
+        placeholder="Enter Room ID"
+        className="flex-1 px-4 py-2 border rounded-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        value={roomId}
+        onChange={(e) => setRoomId(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+      />
+
+      <button
+        onClick={handleSubmit}
+        disabled={loading}
+        className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-500 px-4 py-2 rounded-md"
+      >
+        {loading ? "Joining..." : "Join"}
+      </button>
+
+    </div>
+  );
 }
 
 export default Join;

@@ -1,12 +1,11 @@
-// src/Spinner.js
 import React from "react";
 
 const Spinner = () => {
-	return (
-		<div className='flex items-center h-screen w-screen  bg-gray-900 justify-center space-x-2'>
-			<div className='w-8 h-8 border-4 border-blue-400 border-dashed rounded-full animate-spin'></div>
-		</div>
-	);
+  return (
+    <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
+      <div className="w-10 h-10 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  );
 };
 
 export default Spinner;

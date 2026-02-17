@@ -212,121 +212,120 @@ function Game() {
 		return <Spinner />;
 	}
 	return (
-		<div className='flex h-screen justify-between bg-gray-900'>
-			{gameResult!=null && (
-	<div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-80 flex items-center justify-center z-50">
-		<div className="bg-white dark:bg-zinc-900 p-6 rounded-lg shadow-xl text-center w-80">
-			<h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">
-				{gameResult.result === "win" && "🎉 You Win!"}
-				{gameResult.result === "lose" && "😞 You Lose!"}
-				{gameResult.result === "draw" && "🤝 It's a Draw!"}
-			</h2>
-			<p className="text-gray-600 dark:text-gray-300 mb-6">{gameResult.message}</p>
-			<button
-				onClick={() => navigate("/room")}
-				className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
-			>
-				Back to Room
-			</button>
-		</div>
-	</div>
-)}
-			<div className='w-2/4 flex flex-col items-center justify-center'>
-				<div className='h-96 w-96 rounded-lg border-black border-2'>
-					
-					<Chessboard
-						position={game.fen()}
-						onPieceDrop={onDrop}
-						boardOrientation={boardOrientation}
-						showBoardNotation={true}
-						arePiecesDraggable={canMove}
-						animationDuration={300}
-						ref={chessboardRef}
-					/>
-				</div>
-				<div className="mt-4">
-				<div className={`px-5 py-3 rounded-xl shadow-lg text-lg font-semibold flex items-center gap-3 transition-all duration-300 
-  ${gameStart 
-    ? (game.turn() === playerColor.charAt(0) ? 'bg-green-600' : 'bg-yellow-600') 
-    : 'bg-gray-600'}
-`}>
-  {gameStart ? (
-    game.turn() === playerColor.charAt(0) ? (
-      <>
-        <span className="text-white text-2xl">♟️</span>
-        <span className="text-white">Your Turn <span className="text-sm ml-2">(Color: {playerColor})</span></span>
-      </>
-    ) : (
-      <>
-        <span className="text-white text-2xl">⏳</span>
-        <span className="text-white">Opponent's Turn</span>
-      </>
-    )
-  ) : (
-    <>
-      <span className="text-white text-2xl">🎮</span>
-      <span className="text-white">Game Not Yet Started</span>
-    </>
-  )}
-</div>
+  <div className="min-h-[80vh] w-full flex flex-col lg:flex-row bg-gray-900 text-white">
 
-</div>
-				{/* <div>{Name}</div> */}
-			</div>
-			<div className='w-1/4 bg-gray-800 flex flex-col items-center justify-center rounded-lg'>
-				{/* <div className='text-white text-lg'>Chat Component Placeholder</div> */}
-				
-    <div className="max-w-md mx-auto bg-white dark:bg-zinc-800 shadow-md rounded-lg overflow-hidden">
-      <div className="flex flex-col h-[400px]">
-        <div className="px-4 py-3 border-b dark:border-zinc-700">
-          <div className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold text-zinc-800 dark:text-white">
-              {OppnName}
-            </h2>
-            <div className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-              Online
-            </div>
-          </div>
-        </div>
-        <div
-          className="flex-1 p-3 overflow-y-auto flex flex-col space-y-2"
-          id="chatDisplay"
-        >
-			{Msgs.map((msgObj)=>{
-				if(msgObj.sent==playerId)return <Msgsent key={uuid()}msg={msgObj.msg}/>;
-				return <Msgrec key={uuid()} msg={msgObj.msg}/>;
-			})}
-        </div>
-        <div className="px-3 py-2 border-t dark:border-zinc-700">
-          <div className="flex gap-2">
-            <input
-              placeholder="Type your message..."
-              className="flex-1 p-2 border rounded-lg dark:bg-zinc-700 dark:text-white dark:border-zinc-600 text-sm"
-              id="chatInput"
-              type="text"
-			  value={MsgInput}
-			  onChange={(e)=>{setMsgInput(e.target.value)}}
-			  onKeyDown={(e) => {
-				if (e.key === "Enter")
-					handleMsgInput();
-				}}
-            />
-			
-            <button
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1.5 px-3 rounded-lg transition duration-300 ease-in-out text-sm"
-              id="sendButton"
-			  onClick={handleMsgInput}
-			  
-            >
-              Send
-            </button>
-          </div>
+    {/* RESULT MODAL */}
+    {gameResult && (
+      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+        <div className="bg-white dark:bg-zinc-900 p-6 rounded-lg shadow-xl text-center w-full max-w-sm">
+          <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">
+            {gameResult.result === "win" && "🎉 You Win!"}
+            {gameResult.result === "lose" && "😞 You Lose!"}
+            {gameResult.result === "draw" && "🤝 It's a Draw!"}
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300 mb-6">
+            {gameResult.message}
+          </p>
+          <button
+            onClick={() => navigate("/room")}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md w-full"
+          >
+            Back to Room
+          </button>
         </div>
       </div>
+    )}
+
+    {/* CHESS BOARD SECTION */}
+    <div className="flex-1 flex flex-col items-center justify-center p-4 gap-4">
+
+      {/* BOARD */}
+      <div className="w-full max-w-lg aspect-square border-2 border-black rounded-lg shadow-lg">
+        <Chessboard
+          position={game.fen()}
+          onPieceDrop={onDrop}
+          boardOrientation={boardOrientation}
+          showBoardNotation
+          arePiecesDraggable={canMove}
+          animationDuration={300}
+          ref={chessboardRef}
+        />
+      </div>
+
+      {/* TURN INDICATOR */}
+      <div
+        className={`px-5 py-3 rounded-xl shadow-lg text-lg font-semibold flex items-center gap-3 transition
+        ${
+          gameStart
+            ? game.turn() === playerColor?.charAt(0)
+              ? "bg-green-600"
+              : "bg-yellow-600"
+            : "bg-gray-600"
+        }`}
+      >
+        {gameStart ? (
+          game.turn() === playerColor?.charAt(0) ? (
+            <>♟️ Your Turn ({playerColor})</>
+          ) : (
+            <>⏳ Opponent's Turn</>
+          )
+        ) : (
+          <>🎮 Waiting for opponent...</>
+        )}
+      </div>
+
     </div>
-			</div>	
-		</div>
-	);
+
+    {/* CHAT SECTION */}
+    <div className="w-full lg:w-96 flex flex-col bg-gray-800 p-4">
+
+      <div className="flex flex-col flex-1 bg-white dark:bg-zinc-800 shadow-md rounded-lg overflow-hidden">
+
+        {/* CHAT HEADER */}
+        <div className="px-4 py-3 border-b dark:border-zinc-700 flex justify-between">
+          <h2 className="text-lg font-semibold text-zinc-800 dark:text-white">
+            {OppnName}
+          </h2>
+          <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+            Online
+          </span>
+        </div>
+
+        {/* MESSAGES */}
+        <div className="flex-1 p-3 overflow-y-auto flex flex-col space-y-2">
+          {Msgs.map((msgObj, index) =>
+            msgObj.sent === playerId ? (
+              <Msgsent key={index} msg={msgObj.msg} />
+            ) : (
+              <Msgrec key={index} msg={msgObj.msg} />
+            )
+          )}
+        </div>
+
+        {/* INPUT */}
+        <div className="px-3 py-2 border-t dark:border-zinc-700 flex gap-2">
+          <input
+            placeholder="Type your message..."
+            className="flex-1 p-2 border rounded-lg dark:bg-zinc-700 dark:text-white text-sm"
+            type="text"
+            value={MsgInput}
+            onChange={(e) => setMsgInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleMsgInput()}
+          />
+          <button
+            onClick={handleMsgInput}
+            className="bg-blue-500 hover:bg-blue-700 text-white px-4 rounded-lg"
+          >
+            Send
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+);
+
 }
 
 export default Game;
