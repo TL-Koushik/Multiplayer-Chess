@@ -53,7 +53,7 @@ function Game() {
 	}
 	const onDrop = useCallback(
 		(sourceSquare, targetSquare) => {
-			if(game.turn()!=playerColor.charAt(0))return false;
+			if(!playerColor || game.turn()!=playerColor.charAt(0))return false;
 			const gameCopy = new Chess(game.fen());
 			let move;
 			try {
